@@ -1,5 +1,5 @@
 import pytest
-from solver import parse, solve1, solve2
+from solver import parse, solve1, solve2, solve1_alternative, solve2_alternative
 
 TESTDATA = """
 A Y
@@ -26,4 +26,14 @@ def test_solve1(parsed_data):
 # PART 2
 def test_solve2(parsed_data):
     solution = solve2(parsed_data)
+    assert solution == 12
+
+
+def test_solve1_alternative(parsed_data):
+    solution = solve1_alternative(parsed_data)
+    assert solution == 15
+
+
+def test_solve2_alternative(parsed_data):
+    solution = solve2_alternative(parsed_data)
     assert solution == 12

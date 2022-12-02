@@ -83,14 +83,59 @@ def solve2(data):
     return score
 
 
+TO_INT = {
+    "X": 1,
+    "Y": 2,
+    "Z": 3,
+    "A": 1,
+    "B": 2,
+    "C": 3,
+}
+
+
+SCORE_FOR = {
+    0: 3,
+    1: 0,
+    2: 6,
+}
+
+
+def solve1_alternative(data):
+    score = 0
+    for line in data:
+        theirs, mine = [TO_INT[i] for i in line.split()]
+        score += mine
+        diff = (theirs - mine) % 3
+        score += SCORE_FOR[diff]
+    return score
+
+
+def solve2_alternative(data):
+    score = 0
+    diff_for = {
+        "X": 1,
+        "Y": 0,
+        "Z": 2,
+    }
+    for line in data:
+        theirs, goal = line.split()
+        theirs = TO_INT[theirs]
+        diff = diff_for[goal]
+        mine = ((theirs - diff) - 1) % 3 + 1
+        score += SCORE_FOR[diff]
+        score += mine
+    return score
+
+
 if __name__ == "__main__":
     data = parse(open("input.txt").read().strip())
     print("Part 1: {}".format(solve1(data)))
     print("Part 2: {}".format(solve2(data)))
+    print("Part 1 (alternative): {}".format(solve1_alternative(data)))
+    print("Part 2 (alternative): {}".format(solve2_alternative(data)))
 
     print("\nTime taken:")
     for func, time in measure_time.times:
         print(f"{func:8}{time}s")
     print("----------------")
     print("total   {}s".format(sum(t for _, t in measure_time.times)))
-
