@@ -6,11 +6,11 @@ TESTDATA = """
 
 @pytest.fixture
 def parsed_data():
-    return parse(TESTDATA.strip())
+    return parse(TESTDATA)
 
 
 def test_parse():
-    data = parse(TESTDATA.strip())
+    data = parse(TESTDATA)
     # asserts go here
 
 
