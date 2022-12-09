@@ -62,11 +62,21 @@ def solve1(data):
     return len(visited)
 
 
-def print_grid(head_pos, tail_positions, nrows=30, ncols=30):
+def format_grid(head_pos, tail_positions, nrows=70, ncols=250):
+
+    all_positons = [head_pos] + tail_positions
+    min_x = min(pos[0] for pos in all_positons)
+    min_y = min(pos[1] for pos in all_positons)
+    max_x = max(pos[0] for pos in all_positons)
+    max_y = max(pos[1] for pos in all_positons)
+
+    nrows = 14
+    ncols = 14
+
     grid = [["." for i in range(ncols)] for j in range(nrows)]
 
     def to_ij(x, y):
-        return x + ncols // 2, -y + nrows // 2
+        return x - min_x + 2, -(y - min_y + 2)
 
     for n, pos in list(enumerate(tail_positions, 1))[::-1]:
         i, j = to_ij(*pos)
@@ -75,53 +85,41 @@ def print_grid(head_pos, tail_positions, nrows=30, ncols=30):
     i, j = to_ij(*head_pos)
     grid[j][i] = "H"
 
-    print("\n".join("".join(row) for row in grid))
+    return "\n".join("".join(row) for row in grid)
+
+
+def generate_moves(data):
+    head_position = (0, 0)
+    tail_positions = [(0, 0) for _ in range(9)]
+    for ins, n in data:
+        for _ in range(n):
+            head_position = moved(head_position, ins)
+            lead_position = head_position
+            for i in range(len(tail_positions)):
+                follow_position = tail_positions[i]
+                tail_positions[i] = followed(lead_position, follow_position)
+                lead_position = tail_positions[i]
+                yield head_position, tail_positions
 
 
 # PART 2
 @measure_time
 def solve2(data):
     visited = set()
-    head_position = (0, 0)
-    tail_positions = [(0, 0) for _ in range(9)]
-
-    print_grid(head_position, tail_positions)
-    print(tail_positions)
-    input()
-
-    for ins, n in data:
-        for _ in range(n):
-            head_position = moved(head_position, ins)
-            lead_position = head_position
-
-            hlabel = "H"
-
-            for i in range(len(tail_positions)):
-                follow_position = tail_positions[i]
-
-                flabel = i + 1
-                print(flabel, "following", hlabel)
-                print(follow_position, lead_position)
-
-                tail_positions[i] = followed(lead_position, follow_position)
-                lead_position = tail_positions[i]
-
-                print("updated:")
-                print(tail_positions[i])
-                hlabel = flabel
-
-                # print_grid(head_position, tail_positions)
-                # print(tail_positions)
-                # input()
-            visited.add(tail_positions[-1])
-
+    for head_position, tail_positions in generate_moves(data):
+        visited.add(tail_positions[-1])
     return len(visited)
+
+
+def test_input():
+    data = parse(open(Path(__file__).parent / "input.txt").read())
+    assert solve1(data) == 5619
+    assert solve2(data) == 2376
 
 
 if __name__ == "__main__":
     data = parse(open(Path(__file__).parent / "input.txt").read())
     print("Part 1: {}".format(solve1(data)))
-    assert solve1(data) == 5619
     print("Part 2: {}".format(solve2(data)))
 
     print("\nTime taken:")
