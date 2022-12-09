@@ -62,7 +62,7 @@ def solve1(data):
     return len(visited)
 
 
-def format_grid(head_pos, tail_positions, nrows=70, ncols=250):
+def format_grid(head_pos, tail_positions):
 
     all_positons = [head_pos] + tail_positions
     min_x = min(pos[0] for pos in all_positons)
@@ -73,7 +73,10 @@ def format_grid(head_pos, tail_positions, nrows=70, ncols=250):
     nrows = 14
     ncols = 14
 
-    grid = [["." for i in range(ncols)] for j in range(nrows)]
+    grid = [
+        [" " if (i + min_x + j + min_y) % 4 else "-" for i in range(ncols)]
+        for j in range(nrows)
+    ]
 
     def to_ij(x, y):
         return x - min_x + 2, -(y - min_y + 2)
