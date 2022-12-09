@@ -64,11 +64,11 @@ def solve1(data):
 
 def format_grid(head_pos, tail_positions):
 
-    all_positons = [head_pos] + tail_positions
-    min_x = min(pos[0] for pos in all_positons)
-    min_y = min(pos[1] for pos in all_positons)
-    max_x = max(pos[0] for pos in all_positons)
-    max_y = max(pos[1] for pos in all_positons)
+    all_positions = [head_pos] + tail_positions
+    min_x = min(pos[0] for pos in all_positions)
+    min_y = min(pos[1] for pos in all_positions)
+    max_x = max(pos[0] for pos in all_positions)
+    max_y = max(pos[1] for pos in all_positions)
 
     nrows = 14
     ncols = 14
