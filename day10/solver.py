@@ -51,9 +51,9 @@ def solve2(data):
             out.append([])
             row = out[-1]
         if abs(pos - v) <= 1:
-            row.append("#")
+            row.append("█")
         else:
-            row.append(".")
+            row.append(" ")
     return "\n" + "\n".join("".join(row) for row in out)
 
 
