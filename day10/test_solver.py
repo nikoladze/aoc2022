@@ -1,5 +1,6 @@
 import pytest
 from solver import parse, solve1, solve2
+from textwrap import dedent
 
 TESTDATA = """
 addx 15
@@ -150,6 +151,7 @@ noop
 noop
 """
 
+
 @pytest.fixture
 def parsed_data():
     return parse(TESTDATA.strip())
@@ -169,4 +171,13 @@ def test_solve1(parsed_data):
 # PART 2
 def test_solve2(parsed_data):
     solution = solve2(parsed_data)
-    # asserts go here
+    print(solution)
+    assert solution == dedent(
+        """
+        ##..##..##..##..##..##..##..##..##..##..
+        ###...###...###...###...###...###...###.
+        ####....####....####....####....####....
+        #####.....#####.....#####.....#####.....
+        ######......######......######......####
+        #######.......#######.......#######....."""
+    )

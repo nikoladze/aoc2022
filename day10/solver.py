@@ -14,10 +14,9 @@ def parse(raw_data):
     return raw_data.strip().splitlines()
 
 
-def generate_values(data):
+def generate_cpu(data):
     x = 1
     i = 1
-    result = 0
     for line in data:
         tokens = line.split()
         if len(tokens) == 1:
@@ -36,7 +35,7 @@ def generate_values(data):
 @measure_time
 def solve1(data):
     result = 0
-    for i, v in generate_values(data):
+    for i, v in generate_cpu(data):
         if i in [20, 60, 100, 140, 180, 220]:
             result += i * v
     return result
@@ -45,7 +44,18 @@ def solve1(data):
 # PART 2
 @measure_time
 def solve2(data):
-    pass
+    out = []
+    for j, (i, v) in enumerate(generate_cpu(data)):
+        pos = j % 40
+        if pos == 0:
+            out.append([])
+            row = out[-1]
+        if abs(pos - v) <= 1:
+            row.append("#")
+        else:
+            row.append(".")
+    return "\n" + "\n".join("".join(row) for row in out)
+
 
 
 if __name__ == "__main__":
@@ -58,4 +68,3 @@ if __name__ == "__main__":
         print(f"{func:8}{time}s")
     print("----------------")
     print("total   {}s".format(sum(t for _, t in measure_time.times)))
-
