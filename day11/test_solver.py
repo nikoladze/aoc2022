@@ -1,6 +1,5 @@
-import logging
 import pytest
-from solver import parse, solve1, solve2, logger
+from solver import parse, solve1, solve2
 
 TESTDATA = """
 Monkey 0:
@@ -44,8 +43,6 @@ def test_parse():
 
 # PART 1
 def test_solve1(parsed_data):
-    logging.basicConfig()
-    logger.setLevel(logging.DEBUG)
     solution = solve1(parsed_data)
     assert solution == 10605
 
@@ -53,4 +50,4 @@ def test_solve1(parsed_data):
 # PART 2
 def test_solve2(parsed_data):
     solution = solve2(parsed_data)
-    # asserts go here
+    assert solution == 2713310158
