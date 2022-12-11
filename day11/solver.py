@@ -49,41 +49,69 @@ def get_operation(s):
 
 class Monkey:
     def __init__(self, start, op, test_div, targets):
-        self.items = list(start)
+        self.start = start
+        self._modulos = None
+        self.items = None
         self.op = get_operation(op)
         self.test_div = test_div
         self.targets = targets
         self.n_inspected = 0
 
+
+    @property
+    def modulos(self):
+        return self._modulos
+
+    @modulos.setter
+    def modulos(self, modulos):
+        self._modulos = modulos
+        self.items = {k: list(self.start) for k in self.modulos}
+
+
     def throw(self):
         items_and_targets = []
-        for item in self.items:
-            logger.debug("Inspect with %d", item)
-            item = self.op(item) // 3
-            logger.debug("Updated to: %d", item)
-            logger.debug("%d divisible by %d?", item, self.test_div)
-            if (item % self.test_div) == 0:
-                logger.debug("True!")
-                logger.debug("Throw to %d", self.targets[0])
+        n_items = len(list(self.items.values())[0])
+        for i in range(n_items):
+            logger.debug("  Inspect item number %d", i)
+            item = {}
+            for modulo in self.modulos:
+                #item[modulo] = self.op(self.items[modulo][i]) // 3
+                item[modulo] = self.op(self.items[modulo][i])
+                logger.debug("    Updated to: %d", item[modulo])
+                item[modulo] = item[modulo] % modulo
+                logger.debug("    Update modulo %d: %d", modulo, item[modulo])
+            logger.debug("    Divisible by %d", self.test_div)
+            if item[self.test_div] == 0:
+                logger.debug("    True!")
+                logger.debug("    Throw to %d", self.targets[0])
                 items_and_targets.append((item, self.targets[0]))
             else:
-                logger.debug("False!")
-                logger.debug("Throw to %d", self.targets[1])
+                logger.debug("    False!")
+                logger.debug("    Throw to %d", self.targets[1])
                 items_and_targets.append((item, self.targets[1]))
-        self.n_inspected += len(self.items)
-        self.items = []
+        self.n_inspected += n_items
+        self.items = {k: [] for k in self.modulos}
         return items_and_targets
+
+
+    def append(self, items):
+        for k, v in self.items.items():
+            v.append(items[k])
 
 
 class Game:
     def __init__(self, monkeys):
         self.monkeys = monkeys
+        modulos = [monkey.test_div for monkey in self.monkeys]
+        for monkey in self.monkeys:
+            monkey.modulos = modulos
+
 
     def round(self):
         for i, monkey in enumerate(self.monkeys):
             logger.debug("Monkey %d", i)
             for item, target in monkey.throw():
-                self.monkeys[target].items.append(item)
+                self.monkeys[target].append(item)
 
 
 # PART 1
@@ -99,7 +127,11 @@ def solve1(data):
 # PART 2
 @measure_time
 def solve2(data):
-    pass
+    game = Game([Monkey(**monkey_data) for monkey_data in data])
+    for round in range(10000):
+        game.round()
+    top1, top2 = sorted(monkey.n_inspected for monkey in game.monkeys)[-2:]
+    return top1 * top2
 
 
 if __name__ == "__main__":
@@ -114,3 +146,4 @@ if __name__ == "__main__":
     print("total   {}s".format(sum(t for _, t in measure_time.times)))
 
     monkey = Monkey(**data[0])
+    game = Game([Monkey(**monkey_data) for monkey_data in data])
