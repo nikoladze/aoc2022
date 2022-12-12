@@ -29,88 +29,74 @@ def elevation(letter):
     return ord(letter)
 
 
-# PART 1
-@measure_time
-def solve1(data):
-    start = get_pos(data, "S")
-    costs = {start: 0}
+CACHE = {}
 
-    def search_from(pos):
-        i, j = pos
-        prev = elevation(data[j][i])
-        cost = costs[pos]
+
+def get_cost_map(data):
+    cache_key = tuple(data)
+    if cache_key in CACHE:
+        return CACHE[cache_key]
+
+    i, j = get_pos(data, "E")
+    costs = [[None for _ in row] for row in data]
+    costs[j][i] = 0
+    elevation_map = [[elevation(letter) for letter in row] for row in data]
+
+    nrows = len(data)
+    ncols = len(data[0])
+
+    def search_from(i, j):
+        prev = elevation_map[j][i]
+        cost = costs[j][i]
         for dx, dy in [
             (0, 1),
             (0, -1),
             (1, 0),
             (-1, 0),
         ]:
-            new_pos = (i + dx, j + dy)
-            if not (
-                (0 <= new_pos[0] < len(data[0])) and (0 <= new_pos[1] < len(data))
-            ):
+            new_i, new_j = i + dx, j + dy
+            if new_i < 0 or new_j < 0 or new_i >= ncols or new_j >= nrows:
                 continue
-            letter = data[new_pos[1]][new_pos[0]]
-            new = elevation(letter)
-            #print(f"{pos=}, {new_pos=}, {new=}, {cost=}")
-            if (new - prev) > 1:
+            new_cost = cost + 1
+            other_cost = costs[new_j][new_i]
+            if other_cost is not None and other_cost <= new_cost:
                 continue
-            if new_pos in costs and costs[new_pos] <= (cost + 1):
+            new = elevation_map[new_j][new_i]
+            if (prev - new) > 1:
                 continue
-            costs[new_pos] = cost + 1
-            if letter == "E":
-                continue
-            search_from(new_pos)
+            costs[new_j][new_i] = new_cost
+            search_from(new_i, new_j)
 
-    res =  search_from(start)
-    end = get_pos(data, "E")
-    return costs[end]
+    search_from(i, j)
+    CACHE[cache_key] = costs
+    return costs
+
+
+# PART 1
+@measure_time
+def solve1(data):
+    costs = get_cost_map(data)
+    i, j = get_pos(data, "S")
+    return costs[j][i]
 
 
 # PART 2
 @measure_time
 def solve2(data):
-    start = get_pos(data, "E")
-    costs = {start: 0}
-
-    def search_from(pos):
-        i, j = pos
-        prev = elevation(data[j][i])
-        cost = costs[pos]
-        for dx, dy in [
-            (0, 1),
-            (0, -1),
-            (1, 0),
-            (-1, 0),
-        ]:
-            new_pos = (i + dx, j + dy)
-            if not (
-                (0 <= new_pos[0] < len(data[0])) and (0 <= new_pos[1] < len(data))
-            ):
-                continue
-            letter = data[new_pos[1]][new_pos[0]]
-            new = elevation(letter)
-            #print(f"{pos=}, {new_pos=}, {new=}, {cost=}")
-            if (prev - new) > 1:
-                continue
-            if new_pos in costs and costs[new_pos] <= (cost + 1):
-                continue
-            costs[new_pos] = cost + 1
-            if letter == "a":
-                continue
-            search_from(new_pos)
-
-    res =  search_from(start)
-    #end = get_pos(data, "E")
-    #return costs[end]
-    return min(cost for pos, cost in costs.items() if elevation(data[pos[1]][pos[0]]) == ord("a"))
+    costs = get_cost_map(data)
+    return min(
+        min(
+            cost
+            for i, cost in enumerate(row)
+            if cost is not None and data[j][i] in ["a", "S"]
+        )
+        for j, row in enumerate(costs)
+    )
 
 
 if __name__ == "__main__":
-
-    import resource, sys
-    resource.setrlimit(resource.RLIMIT_STACK, (2**29,-1))
-    sys.setrecursionlimit(10**6)
+    # need slightly more than the default ;)
+    sys.setrecursionlimit(3000)
 
     data = parse(open(Path(__file__).parent / "input.txt").read())
     print("Part 1: {}".format(solve1(data)))
