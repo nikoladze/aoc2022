@@ -70,7 +70,40 @@ def solve1(data):
 # PART 2
 @measure_time
 def solve2(data):
-    pass
+    start = get_pos(data, "E")
+    costs = {start: 0}
+
+    def search_from(pos):
+        i, j = pos
+        prev = elevation(data[j][i])
+        cost = costs[pos]
+        for dx, dy in [
+            (0, 1),
+            (0, -1),
+            (1, 0),
+            (-1, 0),
+        ]:
+            new_pos = (i + dx, j + dy)
+            if not (
+                (0 <= new_pos[0] < len(data[0])) and (0 <= new_pos[1] < len(data))
+            ):
+                continue
+            letter = data[new_pos[1]][new_pos[0]]
+            new = elevation(letter)
+            #print(f"{pos=}, {new_pos=}, {new=}, {cost=}")
+            if (prev - new) > 1:
+                continue
+            if new_pos in costs and costs[new_pos] <= (cost + 1):
+                continue
+            costs[new_pos] = cost + 1
+            if letter == "a":
+                continue
+            search_from(new_pos)
+
+    res =  search_from(start)
+    #end = get_pos(data, "E")
+    #return costs[end]
+    return min(cost for pos, cost in costs.items() if elevation(data[pos[1]][pos[0]]) == ord("a"))
 
 
 if __name__ == "__main__":
