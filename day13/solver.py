@@ -2,7 +2,7 @@
 
 import sys
 from pathlib import Path
-from functools import cmp_to_key
+from functools import total_ordering
 
 import utils
 
@@ -51,12 +51,21 @@ def solve1(data):
     )
 
 
+@total_ordering
+class Packet(list):
+    def __lt__(self, other):
+        return compare(self, other)
+
+    def __eq__(self, other):
+        return compare(self, other) is None
+
+
 # PART 2
 @measure_time
 def solve2(data):
     divider_packets = [[[[2]]], [[6]]]
-    all_packets = sum(data, []) + divider_packets
-    all_packets.sort(key=cmp_to_key(lambda left, right: -int(compare(left, right))))
+    all_packets = [Packet(l) for l in sum(data, []) + divider_packets]
+    all_packets.sort()
     indices = []
     for i, packet in enumerate(all_packets, 1):
         if packet in divider_packets:
