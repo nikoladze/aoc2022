@@ -25,16 +25,19 @@ def boundaries(cave_map):
     return min_x, max_x, max_y
 
 
-def print_cave(cave_map):
+def format_cave(cave_map):
+    out = []
     min_x, max_x, max_y = boundaries(cave_map)
     for y in range(max_y + 1):
+        row = []
         for x in range(min_x, max_x + 1):
             pos = (x, y)
             if pos in cave_map:
-                print(cave_map[pos], end="")
+                row.append(cave_map[pos])
             else:
-                print(".", end="")
-        print("\n", end="")
+                row.append(".")
+        out.append(row)
+    return out
 
 
 def sign(n):
@@ -45,7 +48,7 @@ def sign(n):
     return 0
 
 
-def solve(data, with_floor=False):
+def solve(data, with_floor=False, trace=None):
 
     cave_map = {}
     for line in data:
@@ -66,6 +69,9 @@ def solve(data, with_floor=False):
     else:
         floor_y = None
 
+    if trace is not None:
+        trace.append(cave_map.copy())
+
     def run():
         n = 0
         while True:
@@ -84,6 +90,8 @@ def solve(data, with_floor=False):
                 else:
                     # came to halt
                     cave_map[pos] = "o"
+                    if trace is not None:
+                        trace.append(pos)
                     n += 1
                     if pos == (500, 0):
                         return n
