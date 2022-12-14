@@ -45,13 +45,11 @@ def sign(n):
     return 0
 
 
-# PART 1
-@measure_time
-def solve1(data):
+def solve(data, with_floor=False):
+
     cave_map = {}
     for line in data:
         for (x1, y1), (x2, y2) in zip(line, line[1:]):
-            print((x1, y1), (x2, y2))
             pos = (x1, y1)
             dx = x2 - x1
             dy = y2 - y1
@@ -61,10 +59,12 @@ def solve1(data):
                     break
                 pos = (pos[0] + sign(dx), pos[1] + sign(dy))
 
-
     min_x, max_x, max_y = boundaries(cave_map)
 
-    print_cave(cave_map)
+    if with_floor:
+        floor_y = max_y + 2
+    else:
+        floor_y = None
 
     def run():
         n = 0
@@ -74,11 +74,10 @@ def solve1(data):
                 for dx, dy in [(0, 1), (-1, 1), (1, 1)]:
                     new_pos = (pos[0] + dx, pos[1] + dy)
                     x, y = new_pos
-                    print(new_pos)
-                    if x < min_x or x > max_x or y > max_y:
+                    if floor_y is None and (x < min_x or x > max_x or y > max_y):
                         # falling forever
                         return n
-                    if new_pos not in cave_map:
+                    if new_pos not in cave_map and y != floor_y:
                         # great, i can go here
                         pos = new_pos
                         break
@@ -86,17 +85,23 @@ def solve1(data):
                     # came to halt
                     cave_map[pos] = "o"
                     n += 1
-                    # print_cave(cave_map)
-                    # input()
+                    if pos == (500, 0):
+                        return n
                     break
 
     return run()
 
 
+# PART 1
+@measure_time
+def solve1(data):
+    return solve(data, with_floor=False)
+
+
 # PART 2
 @measure_time
 def solve2(data):
-    pass
+    return solve(data, with_floor=True)
 
 
 if __name__ == "__main__":
