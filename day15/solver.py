@@ -2,6 +2,7 @@
 
 import sys
 from pathlib import Path
+from tqdm.auto import tqdm
 
 import utils
 
@@ -45,9 +46,6 @@ def print_map(data, is_not_at):
         print("\n", end="")
 
 
-from tqdm.auto import tqdm
-
-
 # PART 1
 @measure_time
 def solve1(data, where_y=2000000):
@@ -56,8 +54,7 @@ def solve1(data, where_y=2000000):
         dx_sb = abs(sensor[0] - beacon[0])
         dy_sb = abs(sensor[1] - beacon[1])
         distance = dx_sb + dy_sb
-        for y in range(sensor[1] - distance, sensor[1] + distance + 1):
-        #for y in [where_y]:
+        for y in [where_y]:
             for x in range(sensor[0] - distance, sensor[0] + distance + 1):
                 if (x, y) in [sensor, beacon]:
                     continue
@@ -65,7 +62,6 @@ def solve1(data, where_y=2000000):
                 dy = abs(y - sensor[1])
                 if (dx + dy) <= distance:
                     is_not_at.add((x, y))
-    #print(len(is_not_at))
     if where_y == 10:
         print_map(data, is_not_at)
     return len([(x, y) for x, y in is_not_at if y == where_y])
@@ -104,8 +100,6 @@ def find_not_covered(ranges, xmin, xmax):
     return not_covered
 
 
-
-
 # PART 2
 @measure_time
 def solve2(data, ymax=4000000):
@@ -119,16 +113,13 @@ def solve2(data, ymax=4000000):
             if dx_max > 0:
                 ranges.append((sensor[0] - dx_max, sensor[0] + dx_max))
         not_covered = find_not_covered(ranges, 0, ymax)
-        if y == 1:
-            print(ranges)
         if not_covered:
-            print(not_covered)
             return not_covered[0][0] * 4000000 + y
 
 
 if __name__ == "__main__":
     data = parse(open(Path(__file__).parent / "input.txt").read())
-    #print("Part 1: {}".format(solve1(data)))
+    print("Part 1: {}".format(solve1(data)))
     print("Part 2: {}".format(solve2(data)))
 
     print("\nTime taken:")
@@ -136,6 +127,3 @@ if __name__ == "__main__":
         print(f"{func:8}{time}s")
     print("----------------")
     print("total   {}s".format(sum(t for _, t in measure_time.times)))
-
-
-data = parse(open(Path(__file__).parent / "input.txt").read())
