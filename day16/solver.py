@@ -93,8 +93,13 @@ def solve2(data):
     total_minutes = 26
     state_scores = {}
 
-    def search(pos_me="AA", pos_elefant="AA", open_valves=frozenset(), score=0, time=0):
-        #print(f"{pos_me=}, {pos_elefant=}, {open_valves=}, {score=}, {time=}")
+
+
+    def search(pos_me="AA", pos_elefant="AA", open_valves=frozenset(), score=0, time=0, ident=""):
+        def iprint(*args, **kwargs):
+            #print(ident, *args, **kwargs)
+            pass
+        #iprint(f"{pos_me=}, {pos_elefant=}, {open_valves=}, {score=}, {time=}")
         if time >= total_minutes:
             return score
         try:
@@ -106,6 +111,10 @@ def solve2(data):
         except KeyError:
             pass
         state_scores[(pos_me, pos_elefant, open_valves)] = (score, time)
+
+        iprint()
+        iprint(f"== Minute {time+1} ==")
+        iprint(f"{open_valves=}")
 
         scores = []
         for my_action in [OPEN] + list(destinations[pos_me]):
@@ -130,14 +139,19 @@ def solve2(data):
                         continue
                     if rates[pos_me] == 0:
                         continue
+                    if elefant_action == OPEN and pos_elefant == pos_me:
+                        # if the elefant is in the [same] room *badumm ts*
+                        # i'll let him open the valve (only one of us can do it)
+                        continue
                     new_valves = new_valves | {pos_me}
                     valve_score += rates[pos_me] * (total_minutes - (time + 1))
                 else:
                     dest_me = my_action
-                #print(f"{my_action=}, {elefant_action=}")
+
+                iprint(f"{my_action=}, {elefant_action=}")
                 scores.append(
                     search(
-                        dest_me, dest_elefant, new_valves, score + valve_score, time + 1
+                        dest_me, dest_elefant, new_valves, score + valve_score, time + 1, ident=ident + " "
                     )
                 )
 
@@ -151,7 +165,7 @@ def solve2(data):
 if __name__ == "__main__":
     data = parse(open(Path(__file__).parent / "input.txt").read())
     print("Part 1: {}".format(solve1(data)))
-    #print("Part 2: {}".format(solve2(data)))
+    print("Part 2: {}".format(solve2(data)))
 
     print("\nTime taken:")
     for func, time in measure_time.times:
