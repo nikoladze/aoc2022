@@ -2,6 +2,7 @@
 
 import sys
 from pathlib import Path
+from collections import defaultdict
 
 import utils
 
@@ -38,20 +39,21 @@ def solve1(data):
         )
 
     total_minutes = 30
-    state_scores = {}
+    state_scores = defaultdict(list)
+    all_scores = set()
 
     def search(pos="AA", open_valves=frozenset(), score=0, time=0):
-        if time >= total_minutes:
-            return score
-        try:
-            prev_score, prev_time = state_scores[(pos, open_valves)]
+
+        for prev_score, prev_time in state_scores[(pos, open_valves)]:
             if prev_score >= score and prev_time <= time:
                 # we've been here *and* it took same or less time
                 # *and* we had a same or better score
                 return score
-        except KeyError:
-            pass
-        state_scores[(pos, open_valves)] = (score, time)
+        all_scores.add(score)
+        state_scores[(pos, open_valves)].append((score, time))
+
+        if time >= total_minutes:
+            return score
 
         scores = []
         for action in [OPEN] + list(destinations[pos]):
@@ -71,7 +73,10 @@ def solve1(data):
 
         return max(scores + [0])
 
-    return search()
+    res = search()
+    assert res == max((max(score for score, _ in l) for l in state_scores.values()))
+    assert res == max(all_scores)
+    return res
 
 
 OPEN = 1
@@ -165,7 +170,7 @@ def solve2(data):
 if __name__ == "__main__":
     data = parse(open(Path(__file__).parent / "input.txt").read())
     print("Part 1: {}".format(solve1(data)))
-    print("Part 2: {}".format(solve2(data)))
+    #print("Part 2: {}".format(solve2(data)))
 
     print("\nTime taken:")
     for func, time in measure_time.times:
