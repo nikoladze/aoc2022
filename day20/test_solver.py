@@ -1,6 +1,5 @@
-import logging
 import pytest
-from solver import parse, solve1, solve2, logger, move_entry
+from solver import parse, solve1, solve2, move_entry
 from collections import deque
 
 
@@ -26,8 +25,6 @@ def test_parse(parsed_data):
 
 # PART 1
 def test_solve1(parsed_data):
-    logging.basicConfig()
-    logger.setLevel(logging.DEBUG)
     solution = solve1(parsed_data)
     assert solution == 3
 
