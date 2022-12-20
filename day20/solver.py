@@ -22,12 +22,13 @@ def move_entry(l, i, steps):
     thing = l[i]
     thing_after_me = l[(i + 1) % len(l)]
     debug(f"{thing_after_me=}")
-    i_shift_popped = steps % (len(l) - 1)
-    debug(f"{i_shift_popped=}")
     l.pop(i)
+    # note: l is now shorter since we popped!
     i_thing_after_me = l.index(thing_after_me)
     debug(f"{i_thing_after_me=}")
-    i_place_me_before = (i_thing_after_me + i_shift_popped) % len(l)
+    i_shift = steps % len(l)
+    debug(f"{i_shift=}")
+    i_place_me_before = (i_thing_after_me + i_shift) % len(l)
     debug(f"{i_place_me_before=}")
     l.insert(
         i_place_me_before,
@@ -61,7 +62,29 @@ def solve1(data):
 # PART 2
 @measure_time
 def solve2(data):
-    pass
+    key = 811589153
+    orig = [i * key for i in data]
+    orig = list(enumerate(orig[:]))
+    l = orig[:]
+    debug("")
+    debug([x[1] for x in l])
+    for i in range(10):
+        for i, n in orig:
+            i_curr = l.index((i, n))
+            move_entry(l, i_curr, n)
+            debug([x[1] for x in l])
+            #input()
+    for i, n in l:
+        if n == 0:
+            zero_tuple = (i, n)
+            break
+    debug(zero_tuple)
+    return (
+        l[(l.index(zero_tuple) + 1000) % len(l)][1]
+        + l[(l.index(zero_tuple) + 2000) % len(l)][1]
+        + l[(l.index(zero_tuple) + 3000) % len(l)][1]
+    )
+
 
 
 if __name__ == "__main__":

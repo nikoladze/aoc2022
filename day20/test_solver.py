@@ -35,7 +35,7 @@ def test_solve1(parsed_data):
 # PART 2
 def test_solve2(parsed_data):
     solution = solve2(parsed_data)
-    # asserts go here
+    assert solution == 1623178306
 
 def equal_up_to_rotation(l1, l2):
     d2 = deque(l2)
