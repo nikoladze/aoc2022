@@ -15,11 +15,10 @@ def parse(raw_data):
 
 def move_entry(l, i, steps):
     thing = l[i]
-    thing_after_me = l[(i + 1) % len(l)]
     l.pop(i)
     # note: l is now shorter since we popped!
-    i_thing_after_me = l.index(thing_after_me)
     i_shift = steps % len(l)
+    i_thing_after_me = i if i != len(l) else 0
     i_place_me_before = (i_thing_after_me + i_shift) % len(l)
     l.insert(
         i_place_me_before,
@@ -36,26 +35,26 @@ def score(l):
     return sum(l[(zero_index + k) % len(l)][1] for k in [1000, 2000, 3000])
 
 
-# PART 1
-@measure_time
-def solve1(data):
-    l = list(enumerate(data[:]))
-    for i, steps in l[:]:
-        elem = (i, steps)
-        move_entry(l, l.index(elem), steps)
-    return score(l)
-
-
-# PART 2
-@measure_time
-def solve2(data, key=811589153):
+def solve(data, key=1, n_iterations=1):
     orig = list(enumerate([i * key for i in data]))
     l = orig[:]
-    for i in range(10):
+    for i in range(n_iterations):
         for i, steps in orig:
             elem = (i, steps)
             move_entry(l, l.index(elem), steps)
     return score(l)
+
+
+# PART 1
+@measure_time
+def solve1(data):
+    return solve(data)
+
+
+# PART 2
+@measure_time
+def solve2(data):
+    return solve(data, key=811589153, n_iterations=10)
 
 
 if __name__ == "__main__":
