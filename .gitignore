@@ -9,3 +9,4 @@
 *solver
 aoc_session.sh
 input.txt
+*.lprof
