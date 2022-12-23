@@ -31,8 +31,16 @@ def parse(raw_data):
 
 def print_grid(grid, x, y):
     grid = [list(row) for row in grid]
+    nrows = len(grid)
+    ncols = max(len(row) for row in grid)
     grid[y][x] = "o"
-    print("\n".join(["".join(row) for row in grid]))
+    grid.insert(0, [str(i % 10) for i in range(ncols)])
+    grid.insert(0, [str(i // 10) for i in range(ncols)])
+    grid[0].insert(0, "  ")
+    grid[1].insert(0, "  ")
+    for i, row in enumerate(grid[2:]):
+        row.insert(0, f"{i:02d}")
+    return "\n".join(["".join(row) for row in grid])
 
 
 # PART 1
@@ -90,18 +98,196 @@ def solve1(data):
                     # print("hit the wall - done moving")
                     break
                 x, y = x2, y2
-                #input()
-                #print_grid(grid, x, y)
+                # input()
+                # print_grid(grid, x, y)
 
     row = y + 1
     col = x + 1
     return 1000 * row + 4 * col + facing
 
 
+class Cube:
+    def __init__(self, grid, areas, connections):
+        self.areas = areas
+        self.connections = connections
+
+        self.grid = grid
+        self.nrows = len(self.grid)
+        self.ncols = max(len(row) for row in self.grid)
+        self.n_per_face = max(self.nrows, self.ncols) // 4
+        self.velocities = deque([(1, 0), (0, 1), (-1, 0), (0, -1)])
+
+        y = 0
+        for x, c in enumerate(self.grid[0]):
+            if c == ".":
+                break
+        self.pos = (x, y)
+
+    def your_face(self, x, y):
+        return int(self.areas[y // self.n_per_face][x // self.n_per_face])
+
+    def border_you_run_into(self, x, y, dx, dy):
+        if dx < 0 and x % self.n_per_face == 0:
+            return 0  # L
+        if dx > 0 and x % self.n_per_face == self.n_per_face - 1:
+            return 1  # R
+        if dy < 0 and y % self.n_per_face == 0:
+            return 2  # T
+        if dy > 0 and y % self.n_per_face == self.n_per_face - 1:
+            return 3  # B
+        raise IndexError(
+            f"We don't seem to be running into any border with "
+            f"{x=}, {y=}, {dx=}, {dy=} don't we?"
+        )
+
+    def topleft_for_face(self, face):
+        for j, row in enumerate(self.areas):
+            for i, test_face in enumerate(row):
+                if test_face == ".":
+                    continue
+                test_face = int(test_face)
+                if test_face == face:
+                    return i * self.n_per_face, j * self.n_per_face
+
+    def wrapped(self, x, y, dx, dy):
+        """
+        x, y: coordinates before wrapping
+        dx, dy: moving velocity before wrapping
+        returns updated x, y, dx, dy
+        """
+        face = self.your_face(x, y)
+        border = self.border_you_run_into(x, y, dx, dy)
+        goto = self.connections[face][border]
+        goto_face = int(goto[0])
+        from_to = "LRTB"[border] + goto[1]
+        # relative coordinates from top left of the face
+        n = self.n_per_face
+        rx, ry = x % n, y % n
+        # first transfer into coordinates as if i would hit the top
+        nx = n - rx - 1
+        ny = n - ry - 1
+        print(rx, ry, nx, ny)
+        rx, ry = {
+            "L": (ny, 0),
+            "R": (ry, 0),
+            "T": (rx, 0),
+            "B": (nx, 0),
+        }[from_to[0]]
+        # then from top to goal
+        nx = n - rx - 1
+        ny = n - ry - 1
+        rx, ry = {
+            "L": (0, rx),
+            "R": (n - 1, nx),
+            "T": (nx, 0),
+            "B": (rx, n - 1),
+        }[from_to[1]]
+        # ... now find topleft, add rx, ry
+        # + determine dx, dy
+        # print(from_to, face, goto, rx, ry)
+        x, y = self.topleft_for_face(goto_face)
+        # print(x, y, rx, ry)
+        x, y = x + rx, y + ry
+        # print(x, y)
+        dx, dy = {
+            "T": (0, 1),
+            "B": (0, -1),
+            "L": (1, 0),
+            "R": (-1, 0),
+        }[from_to[1]]
+        return x, y, dx, dy
+
+    def __str__(self):
+        return print_grid(self.grid, *self.pos)
+
+    @property
+    def velocity(self):
+        return self.velocities[0]
+
+    @velocity.setter
+    def velocity(self, v):
+        for i in range(len(self.velocities)):
+            if v == self.velocity:
+                break
+            self.rotate()
+        else:
+            raise ValueError(f"Invalid velocity `{v}`")
+
+    def rotate(self, direction="L"):
+        if direction == "L":
+            self.velocities.rotate(1)
+        elif direction == "R":
+            self.velocities.rotate(-1)
+        else:
+            raise KeyError(f"Invalid rotation instruction `{direction}`")
+
+    def in_grid(self, x, y):
+        if x < 0 or y < 0:
+            return False
+        try:
+            c = self.grid[y][x]
+        except IndexError:
+            return False
+        if c == " ":
+            return False
+        return True
+
+    def move(self, instruction):
+        if isinstance(instruction, str):
+            self.rotate(instruction)
+            return
+
+        dx, dy = self.velocity
+        x, y = self.pos
+        for i in range(instruction):
+            x2, y2, dx2, dy2 = (x + dx, y + dy, dx, dy)
+            if not self.in_grid(x2, y2):
+                x2, y2, dx2, dy2 = self.wrapped(x, y, dx, dy)
+            if self.grid[y2][x2] == "#":
+                break
+            x, y, dx, dy = x2, y2, dx2, dy2
+            self.velocity = (dx, dy)
+        self.pos = (x, y)
+
+
+# hardcoded for my input
+AREAS = [
+    ".12.",
+    ".3..",
+    "45..",
+    "6...",
+]
+
+CONNECTIONS = {
+    #    L     R     T     B
+    #    ..    ..    ..    ..
+    1: ["4L", "2L", "6L", "3T"],
+    2: ["1R", "5R", "6B", "3R"],
+    3: ["4T", "2B", "1B", "5T"],
+    4: ["1L", "5L", "3L", "6T"],
+    5: ["4R", "2R", "3B", "6R"],
+    6: ["1T", "5B", "4B", "2T"],
+}
+
 # PART 2
 @measure_time
-def solve2(data):
-    pass
+def solve2(data, areas=AREAS, connections=CONNECTIONS):
+    grid, instructions = data
+
+    cube = Cube(grid, areas=areas, connections=connections)
+    # print()
+    # print(cube)
+    for instruction in instructions:
+        cube.move(instruction)
+        # print(instruction)
+        # print(cube)
+        # input()
+    x, y = cube.pos
+    row = y + 1
+    col = x + 1
+    facing = [(1, 0), (0, 1), (-1, 0), (0, -1)].index(cube.velocity)
+    print(row, col, facing)
+    return 1000 * row + 4 * col + facing
 
 
 if __name__ == "__main__":
@@ -114,3 +300,12 @@ if __name__ == "__main__":
         print(f"{func:8}{time}s")
     print("----------------")
     print("total   {}s".format(sum(t for _, t in measure_time.times)))
+
+
+from testdata import TESTDATA
+
+grid, instructions = parse(TESTDATA)
+
+cube = Cube(grid, areas=AREAS, connections=CONNECTIONS)
+cube.pos = (11, 6)
+cube.velocity = (1, 0)
