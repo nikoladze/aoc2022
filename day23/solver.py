@@ -27,7 +27,7 @@ def print_grid(positions):
         print("\n", end="")
 
 
-def solve(data, max_rounds=10000):
+def solve(data, max_rounds=10000, trace=None):
     positions = set()
     for y, row in enumerate(data):
         for x, c in enumerate(row):
@@ -53,6 +53,8 @@ def solve(data, max_rounds=10000):
         return True
 
     prev = positions.copy()
+    if trace is not None:
+        trace.append(frozenset(positions))
     for round in range(max_rounds):
         proposed = defaultdict(list)
         for x, y in positions:
@@ -72,6 +74,8 @@ def solve(data, max_rounds=10000):
         if prev == positions:
             return round + 1, positions
         prev = positions.copy()
+        if trace is not None:
+            trace.append(frozenset(positions))
 
     return None, positions
 
