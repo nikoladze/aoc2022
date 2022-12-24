@@ -159,7 +159,101 @@ def solve1(data):
 # PART 2
 @measure_time
 def solve2(data):
-    pass
+    blizzards = defaultdict(set)
+
+    blizzards_row_col = {k: defaultdict(list) for k in "<>^v"}
+
+    wall = set()
+    nrows = len(data)
+    ncols = len(data[-1])
+    for y, row in enumerate(data):
+        for x, c in enumerate(row):
+            if c == "#":
+                wall.add((x, y))
+                continue
+            if c != ".":
+                blizzards[x, y].add(c)
+
+                # coordinates here w/o walls
+                if c in "<>":
+                    blizzards_row_col[c][y - 1].append(x - 1)
+                if c in "^v":
+                    blizzards_row_col[c][x - 1].append(y - 1)
+                continue
+
+    def is_hit_at(x, y, t):
+        # w/o walls
+        nc = ncols - 2
+        nr = nrows - 2
+        x -= 1
+        y -= 1
+        for xb in blizzards_row_col[">"][y]:
+            if (xb + t) % nc == x:
+                return True
+        for xb in blizzards_row_col["<"][y]:
+            if (xb - t) % nc == x:
+                return True
+        for yb in blizzards_row_col["v"][x]:
+            if (yb + t) % nr == y:
+                return True
+        for yb in blizzards_row_col["^"][x]:
+            if (yb - t) % nr == y:
+                return True
+        return False
+
+
+    def is_outside(x, y):
+        if x < 0 or y < 0:
+            return True
+        if x >= ncols or y >= nrows:
+            return True
+        return False
+
+
+    #max_t = 693
+    #max_t = 688
+
+    def search(start, goal, t=0, max_t=1000):
+        x, y = start
+        times = set([max_t])
+        visited = set()
+        q = deque([(x, y, t)])
+        while q:
+            #x, y, t = q.popleft()
+            x, y, t = q.pop()
+            #print(min(times), len(times))
+            #print(x, y, t, len(q))
+            if (x, y) == goal:
+                times.add(t)
+            visited.add((x, y, t))
+            #for dx, dy in [(0, 1), (0, -1), (-1, 0), (1, 0), (0, 0)]:
+            for dx, dy in [(0, -1), (-1, 0), (0, 0), (1, 0), (0, 1)]:
+            #for dx, dy in [(1, 0), (0, 1), (0, 0), (0, -1), (-1, 0)]:
+                xnew, ynew = x + dx, y + dy
+                tnew = t + 1
+                #print(f"{xnew=}, {ynew=}, {(xnew, ynew) in wall=}, {is_outside(xnew, ynew)=}, {is_hit_at(xnew, ynew, tnew)=}")
+                if (xnew, ynew) in wall:
+                    continue
+                if is_outside(xnew, ynew):
+                    continue
+                if is_hit_at(xnew, ynew, tnew):
+                    continue
+                if tnew >= max_t:
+                    continue
+                if tnew >= min(times):
+                    continue
+                if (xnew, ynew, tnew) in visited:
+                    continue
+                q.append((xnew, ynew, tnew))
+
+        return min(times)
+
+    start = (1, 0)
+    goal = (ncols - 2, nrows - 1)
+    t1 = search(start=start, goal=goal)
+    t2 = search(start=goal, goal=start, t=t1, max_t=2000)
+    t3 = search(start=start, goal=goal, t=t2, max_t=3000)
+    return t3
 
 
 if __name__ == "__main__":
