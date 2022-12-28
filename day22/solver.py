@@ -72,12 +72,7 @@ def solve1(data):
                 return x, y
             x, y = x2, y2
 
-    # print()
-    # print_grid(grid, x, y)
     for instruction in instructions:
-        # print()
-        # print(f"{instruction=}, {facings[0]=}")
-        # print()
         if instruction == "L":
             facings.rotate(1)
         elif instruction == "R":
@@ -86,20 +81,12 @@ def solve1(data):
             facing = facings[0]
             dx, dy = [(1, 0), (0, 1), (-1, 0), (0, -1)][facing]
             for i in range(instruction):
-                # print(f"{dx=}, {dy=}")
                 x2, y2 = (x + dx, y + dy)
                 if not in_grid(x2, y2):
                     x2, y2 = wrap(x2, y2, dx, dy)
-                    # print("wrapping to:")
-                    # print_grid(grid, x2, y2)
-                # print(f"{x=}, {y=}, {x2=}, {y2=}")
-                # print(f"{grid[y][x]=}, {grid[y2][x2]=}")
                 if grid[y2][x2] == "#":
-                    # print("hit the wall - done moving")
                     break
                 x, y = x2, y2
-                # input()
-                # print_grid(grid, x, y)
 
     row = y + 1
     col = x + 1
@@ -109,7 +96,12 @@ def solve1(data):
 class Cube:
     def __init__(self, grid, areas, connections):
         self.areas = areas
-        self.connections = connections
+        self.connections = {
+            # address as e.g. connections[1]["L"]
+            # instead of connections[1][0]
+            k: dict(zip("LRTB", v))
+            for k, v in connections.items()
+        }
 
         self.grid = grid
         self.nrows = len(self.grid)
@@ -128,13 +120,13 @@ class Cube:
 
     def border_you_run_into(self, x, y, dx, dy):
         if dx < 0 and x % self.n_per_face == 0:
-            return 0  # L
+            return "L"
         if dx > 0 and x % self.n_per_face == self.n_per_face - 1:
-            return 1  # R
+            return "R"
         if dy < 0 and y % self.n_per_face == 0:
-            return 2  # T
+            return "T"
         if dy > 0 and y % self.n_per_face == self.n_per_face - 1:
-            return 3  # B
+            return "B"
         raise IndexError(
             f"We don't seem to be running into any border with "
             f"{x=}, {y=}, {dx=}, {dy=} don't we?"
@@ -159,20 +151,22 @@ class Cube:
         border = self.border_you_run_into(x, y, dx, dy)
         goto = self.connections[face][border]
         goto_face = int(goto[0])
-        from_to = "LRTB"[border] + goto[1]
+        goto_border = goto[1]
+
         # relative coordinates from top left of the face
         n = self.n_per_face
         rx, ry = x % n, y % n
+
         # first transfer into coordinates as if i would hit the top
         nx = n - rx - 1
         ny = n - ry - 1
-        print(rx, ry, nx, ny)
         rx, ry = {
             "L": (ny, 0),
             "R": (ry, 0),
             "T": (rx, 0),
             "B": (nx, 0),
-        }[from_to[0]]
+        }[border]
+
         # then from top to goal
         nx = n - rx - 1
         ny = n - ry - 1
@@ -181,20 +175,19 @@ class Cube:
             "R": (n - 1, nx),
             "T": (nx, 0),
             "B": (rx, n - 1),
-        }[from_to[1]]
-        # ... now find topleft, add rx, ry
-        # + determine dx, dy
-        # print(from_to, face, goto, rx, ry)
+        }[goto_border]
+
+        # now find topleft, add rx, ry
+        # and determine new dx, dy
         x, y = self.topleft_for_face(goto_face)
-        # print(x, y, rx, ry)
         x, y = x + rx, y + ry
-        # print(x, y)
         dx, dy = {
             "T": (0, 1),
             "B": (0, -1),
             "L": (1, 0),
             "R": (-1, 0),
-        }[from_to[1]]
+        }[goto_border]
+
         return x, y, dx, dy
 
     def __str__(self):
@@ -258,6 +251,8 @@ AREAS = [
     "6...",
 ]
 
+# e.g. "4L" for the first entry of 1 means
+# the left edge of area 1 is connected to the left edge of area 4
 CONNECTIONS = {
     #    L     R     T     B
     #    ..    ..    ..    ..
@@ -273,20 +268,13 @@ CONNECTIONS = {
 @measure_time
 def solve2(data, areas=AREAS, connections=CONNECTIONS):
     grid, instructions = data
-
     cube = Cube(grid, areas=areas, connections=connections)
-    # print()
-    # print(cube)
     for instruction in instructions:
         cube.move(instruction)
-        # print(instruction)
-        # print(cube)
-        # input()
     x, y = cube.pos
     row = y + 1
     col = x + 1
     facing = [(1, 0), (0, 1), (-1, 0), (0, -1)].index(cube.velocity)
-    print(row, col, facing)
     return 1000 * row + 4 * col + facing
 
 
@@ -300,12 +288,3 @@ if __name__ == "__main__":
         print(f"{func:8}{time}s")
     print("----------------")
     print("total   {}s".format(sum(t for _, t in measure_time.times)))
-
-
-from testdata import TESTDATA
-
-grid, instructions = parse(TESTDATA)
-
-cube = Cube(grid, areas=AREAS, connections=CONNECTIONS)
-cube.pos = (11, 6)
-cube.velocity = (1, 0)
